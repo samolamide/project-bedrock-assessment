@@ -172,9 +172,3 @@ Also destroy bootstrap state bucket if no longer needed.
 | S3 Bucket | bedrock-assets-alt-soe-025-4363 |
 | Lambda | bedrock-asset-processor |
 | Tag | Project=karatu-2025-capstone |
-
-## Submission
-
-1. Push repo (public or grant access)
-2. Include `grading.json` at repo root
-3. Submit Google Doc with repo link, architecture diagram, app URL, and `bedrock-dev-view` credentials to the course form
