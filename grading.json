@@ -1,27 +1,27 @@
 {
-    "region":  {
-                   "sensitive":  false,
-                   "type":  "string",
-                   "value":  "us-east-1"
-               },
-    "cluster_name":  {
-                         "sensitive":  false,
-                         "type":  "string",
-                         "value":  "project-bedrock-cluster"
-                     },
-    "cluster_endpoint":  {
-                             "sensitive":  false,
-                             "type":  "string",
-                             "value":  "https://202D59D520BC0F6AD8DF3C675FA9E55B.gr7.us-east-1.eks.amazonaws.com"
-                         },
-    "vpc_id":  {
-                   "sensitive":  false,
-                   "type":  "string",
-                   "value":  "vpc-08a9c894be602c10d"
-               },
-    "assets_bucket_name":  {
-                               "sensitive":  false,
-                               "type":  "string",
-                               "value":  "bedrock-assets-alt-soe-025-4363"
-                           }
+  "cluster_endpoint": {
+    "sensitive": false,
+    "type": "string",
+    "value": "https://202D59D520BC0F6AD8DF3C675FA9E55B.gr7.us-east-1.eks.amazonaws.com"
+  },
+  "cluster_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "project-bedrock-cluster"
+  },
+  "region": {
+    "sensitive": false,
+    "type": "string",
+    "value": "us-east-1"
+  },
+  "vpc_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "vpc-08a9c894be602c10d"
+  },
+  "assets_bucket_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "bedrock-assets-alt-soe-025-4363"
+  }
 }
