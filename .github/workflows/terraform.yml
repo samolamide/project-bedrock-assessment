@@ -1,0 +1,109 @@
+name: Terraform CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "lambda/**"
+      - ".github/workflows/terraform.yml"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "lambda/**"
+      - ".github/workflows/terraform.yml"
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+env:
+  AWS_REGION: us-east-1
+  TF_WORKING_DIR: terraform
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: Helm dependency update
+        run: helm dependency update ../retail-store-sample-app/src/app/chart
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -input=false -no-color -out=tfplan 2>&1 | tee plan.txt
+          echo "plan<<EOF" >> $GITHUB_OUTPUT
+          cat plan.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment Plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = `${{ steps.plan.outputs.plan }}`;
+            const truncated = plan.length > 60000 ? plan.substring(0, 60000) + '\n...truncated' : plan;
+            const body = `## Terraform Plan\n\`\`\`\n${truncated}\n\`\`\``;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Update grading.json
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          terraform output -json \
+            | jq '{cluster_endpoint, cluster_name, region, vpc_id, assets_bucket_name}' \
+            > ../grading.json
+
+      - name: Commit grading.json
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          cd ..
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add grading.json
+          git diff --staged --quiet || git commit -m "chore: update grading.json from terraform apply"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

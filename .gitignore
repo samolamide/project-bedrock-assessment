@@ -1,0 +1,35 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+crash.log
+apply.log
+apply2.log
+*.log
+override.tf
+override.tf.json
+
+# Secrets
+*.pem
+credentials.txt
+bedrock-dev-view-credentials.txt
+bedrock-dev-view-credentials.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Lambda package
+lambda/bedrock-asset-processor/*.zip
+
+# Sample app: only Helm chart sources needed for deployment
+retail-store-sample-app/*
+!retail-store-sample-app/src/

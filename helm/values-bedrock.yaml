@@ -1,0 +1,88 @@
+# Project Bedrock Helm values (reference)
+# Production deployment uses terraform/templates/values-bedrock.yaml.tpl
+# Passwords are stored in Kubernetes secrets synced from AWS Secrets Manager — never commit credentials.
+
+cart:
+  fullnameOverride: carts
+  dynamodb:
+    create: false
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: "<carts-irsa-role-arn>"
+  app:
+    persistence:
+      provider: dynamodb
+      dynamodb:
+        tableName: project-bedrock-carts
+        createTable: false
+
+catalog:
+  fullnameOverride: catalog
+  mysql:
+    create: false
+  securityGroups:
+    create: true
+    securityGroupIds:
+      - "<catalog-pod-security-group-id>"
+  app:
+    persistence:
+      provider: mysql
+      endpoint: "<catalog-rds-endpoint>:3306"
+      database: catalog
+      secret:
+        create: false
+        name: catalog-db
+    search:
+      enabled: false
+
+checkout:
+  fullnameOverride: checkout
+  redis:
+    create: true
+  app:
+    endpoints:
+      orders: http://orders:80
+
+orders:
+  fullnameOverride: orders
+  postgresql:
+    create: false
+  rabbitmq:
+    create: true
+  securityGroups:
+    create: true
+    securityGroupIds:
+      - "<orders-pod-security-group-id>"
+  app:
+    persistence:
+      provider: postgres
+      endpoint: "<orders-rds-endpoint>:5432"
+      database: orders
+      secret:
+        create: false
+        name: orders-db
+    messaging:
+      provider: rabbitmq
+
+ui:
+  fullnameOverride: ui
+  app:
+    endpoints:
+      catalog: http://catalog:80
+      carts: http://carts:80
+      checkout: http://checkout:80
+      orders: http://orders:80
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    className: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/healthcheck-path: /actuator/health/liveness
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443},{"HTTP":80}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/certificate-arn: "<acm-certificate-arn>"
+    hosts:
+      - retail.example.com
