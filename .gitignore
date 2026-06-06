@@ -17,7 +17,7 @@ override.tf.json
 *.pem
 credentials.txt
 bedrock-dev-view-credentials.txt
-bedrock-dev-view-credentials.txt
+google-doc-submission.txt
 
 # OS
 .DS_Store
