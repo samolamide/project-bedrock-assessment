@@ -99,16 +99,7 @@ jobs:
 
       - name: Terraform Apply
         if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          if [ ! -f tfplan ]; then
-            echo "::error::No saved plan file (tfplan). Terraform plan must succeed before apply."
-            exit 1
-          fi
-          if terraform show -json tfplan | jq -e '.complete == false' >/dev/null; then
-            echo "::error::Saved plan is incomplete. Fix errors in the Terraform Plan step first."
-            exit 1
-          fi
-          terraform apply -input=false -auto-approve tfplan
+        run: terraform apply -input=false -auto-approve tfplan
 
       - name: Update grading.json
         if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push'

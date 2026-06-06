@@ -18,8 +18,37 @@ module "eks" {
     "scheduler",
   ]
 
-  enable_cluster_creator_admin_permissions = true
-  enable_irsa                            = true
+  enable_cluster_creator_admin_permissions = false
+  enable_irsa                              = true
+
+  access_entries = merge(
+    {
+      bedrock_admin = {
+        principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/bedrock-admin"
+        policy_associations = {
+          admin = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    },
+    var.create_github_oidc && var.github_org != "" && var.github_repo != "" ? {
+      github_actions = {
+        principal_arn = aws_iam_role.github_terraform[0].arn
+        policy_associations = {
+          admin = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    } : {}
+  )
 
   cluster_addons = {
     vpc-cni = {
