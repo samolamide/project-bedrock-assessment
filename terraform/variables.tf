@@ -61,13 +61,13 @@ variable "route53_zone_id" {
 variable "github_org" {
   description = "GitHub organization or username for OIDC trust"
   type        = string
-  default     = ""
+  default     = "samolamide"
 }
 
 variable "github_repo" {
   description = "GitHub repository name for OIDC trust"
   type        = string
-  default     = ""
+  default     = "project-bedrock-assessment"
 }
 
 variable "create_github_oidc" {

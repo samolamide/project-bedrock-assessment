@@ -55,3 +55,25 @@ resource "aws_iam_role_policy_attachment" "github_terraform_admin" {
   role       = aws_iam_role.github_terraform[0].name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
+
+resource "aws_eks_access_entry" "github_terraform" {
+  count = var.create_github_oidc && var.github_org != "" && var.github_repo != "" ? 1 : 0
+
+  cluster_name  = module.eks.cluster_name
+  principal_arn = aws_iam_role.github_terraform[0].arn
+  type          = "STANDARD"
+
+  depends_on = [module.eks]
+}
+
+resource "aws_eks_access_policy_association" "github_terraform" {
+  count = var.create_github_oidc && var.github_org != "" && var.github_repo != "" ? 1 : 0
+
+  cluster_name  = module.eks.cluster_name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = aws_eks_access_entry.github_terraform[0].principal_arn
+
+  access_scope {
+    type = "cluster"
+  }
+}
